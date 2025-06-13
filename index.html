@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URILEX - Modern Chat Platform</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-storage-compat.js"></script>
     <style>
         :root {
             --discord-dark: #36393f;
@@ -20,6 +21,33 @@
             --discord-purple: #5865f2;
             --discord-text: #dcddde;
             --discord-text-muted: #a3a6aa;
+            --discord-red: #ed4245;
+            --discord-yellow: #f9a62b;
+            
+            /* Theme variables */
+            --bg-primary: var(--discord-dark);
+            --bg-secondary: var(--discord-darker);
+            --bg-tertiary: var(--discord-darkest);
+            --text-primary: var(--discord-text);
+            --text-secondary: var(--discord-text-muted);
+            --accent-primary: var(--discord-blue);
+            --accent-success: var(--discord-green);
+            --accent-danger: var(--discord-red);
+            --border-color: var(--discord-gray);
+            --card-bg: rgba(32, 34, 37, 0.6);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f2f3f5;
+            --bg-secondary: #ebedef;
+            --bg-tertiary: #e3e5e8;
+            --text-primary: #2e3338;
+            --text-secondary: #747f8d;
+            --accent-primary: #5865f2;
+            --accent-success: #3ba55d;
+            --accent-danger: #ed4245;
+            --border-color: #c7ccd1;
+            --card-bg: rgba(255, 255, 255, 0.9);
         }
 
         * {
@@ -27,11 +55,12 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         body {
-            background-color: var(--discord-darkest);
-            color: var(--discord-text);
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
             height: 100vh;
             display: flex;
             overflow: hidden;
@@ -44,11 +73,11 @@
             height: 100%;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, var(--discord-darkest) 0%, var(--discord-darker) 100%);
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
         }
 
         .auth-card {
-            background: var(--discord-dark);
+            background: var(--bg-primary);
             border-radius: 8px;
             padding: 40px;
             width: 480px;
@@ -63,7 +92,7 @@
         .logo h1 {
             font-size: 2.5rem;
             font-weight: 800;
-            background: linear-gradient(90deg, #5865f2, #57f287);
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-success));
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -71,13 +100,13 @@
         }
 
         .logo p {
-            color: var(--discord-text-muted);
+            color: var(--text-secondary);
             margin-top: 8px;
             font-size: 1.1rem;
         }
 
         .auth-btn {
-            background: var(--discord-blue);
+            background: var(--accent-primary);
             color: white;
             border: none;
             border-radius: 4px;
@@ -95,7 +124,7 @@
         }
 
         .auth-btn:hover {
-            background: #4752c4;
+            filter: brightness(0.9);
             transform: translateY(-2px);
         }
 
@@ -118,7 +147,7 @@
         }
 
         .setup-content {
-            background: var(--discord-dark);
+            background: var(--bg-primary);
             padding: 30px;
             border-radius: 8px;
             width: 480px;
@@ -142,20 +171,20 @@
         .form-control {
             width: 100%;
             padding: 12px;
-            background: var(--discord-darkest);
-            border: 1px solid var(--discord-gray);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            color: var(--discord-text);
+            color: var(--text-primary);
             font-size: 1rem;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--discord-blue);
+            border-color: var(--accent-primary);
         }
 
         .btn {
-            background: var(--discord-blue);
+            background: var(--accent-primary);
             color: white;
             border: none;
             border-radius: 4px;
@@ -168,7 +197,15 @@
         }
 
         .btn:hover {
-            background: #4752c4;
+            filter: brightness(0.9);
+        }
+
+        .btn-danger {
+            background: var(--accent-danger);
+        }
+
+        .btn-success {
+            background: var(--accent-success);
         }
 
         /* App Layout */
@@ -182,18 +219,19 @@
         /* Sidebar */
         .sidebar {
             width: 240px;
-            background: var(--discord-dark);
+            background: var(--bg-primary);
             display: flex;
             flex-direction: column;
             height: 100%;
+            position: relative;
         }
 
         .user-profile {
             display: flex;
             align-items: center;
             padding: 16px;
-            background: var(--discord-darker);
-            border-bottom: 1px solid var(--discord-gray);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .avatar {
@@ -221,25 +259,25 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--discord-green);
+            background: var(--accent-success);
         }
 
         .user-tag {
             font-size: 0.8rem;
-            color: var(--discord-text-muted);
+            color: var(--text-secondary);
         }
 
         /* Navigation */
         .nav-section {
             padding: 16px 8px;
-            border-bottom: 1px solid var(--discord-gray);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .nav-title {
             text-transform: uppercase;
             font-size: 0.75rem;
             font-weight: 700;
-            color: var(--discord-text-muted);
+            color: var(--text-secondary);
             margin-bottom: 8px;
             padding: 0 8px;
         }
@@ -255,7 +293,7 @@
         }
 
         .nav-item:hover, .nav-item.active {
-            background: var(--discord-gray);
+            background: var(--bg-tertiary);
         }
 
         .nav-item i {
@@ -279,7 +317,7 @@
         }
 
         .friend-item:hover, .friend-item.active {
-            background: var(--discord-gray);
+            background: var(--bg-tertiary);
         }
 
         .friend-avatar {
@@ -307,16 +345,39 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--discord-light-gray);
+            background: var(--text-secondary);
         }
 
         .friend-status.online {
-            background: var(--discord-green);
+            background: var(--accent-success);
         }
 
         .friend-activity {
             font-size: 0.75rem;
-            color: var(--discord-text-muted);
+            color: var(--text-secondary);
+        }
+
+        /* Settings Button */
+        .settings-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            width: 90%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .settings-btn:hover {
+            background: var(--accent-primary);
+            color: white;
         }
 
         /* Main Content */
@@ -324,13 +385,13 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: var(--discord-darker);
+            background: var(--bg-secondary);
         }
 
         /* Chat Header */
         .chat-header {
             padding: 16px;
-            border-bottom: 1px solid var(--discord-gray);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             height: 60px;
@@ -343,7 +404,7 @@
         }
 
         .chat-title i {
-            color: var(--discord-green);
+            color: var(--accent-success);
         }
 
         .chat-name {
@@ -370,6 +431,7 @@
             border-radius: 50%;
             margin-right: 16px;
             object-fit: cover;
+            flex-shrink: 0;
         }
 
         .message-content {
@@ -389,7 +451,7 @@
 
         .message-time {
             font-size: 0.75rem;
-            color: var(--discord-text-muted);
+            color: var(--text-secondary);
         }
 
         .message-text {
@@ -405,12 +467,12 @@
         /* Message Input */
         .message-input-container {
             padding: 16px;
-            background: var(--discord-gray);
+            background: var(--bg-tertiary);
         }
 
         .message-input {
             display: flex;
-            background: var(--discord-dark);
+            background: var(--bg-primary);
             border-radius: 8px;
             padding: 8px;
         }
@@ -422,22 +484,22 @@
         }
 
         .input-tools i {
-            color: var(--discord-text-muted);
+            color: var(--text-secondary);
             cursor: pointer;
             padding: 8px;
             border-radius: 4px;
         }
 
         .input-tools i:hover {
-            color: var(--discord-text);
-            background: var(--discord-gray);
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
         }
 
         .message-input-field {
             flex: 1;
             background: transparent;
             border: none;
-            color: var(--discord-text);
+            color: var(--text-primary);
             padding: 8px;
             font-size: 1rem;
             resize: none;
@@ -450,7 +512,7 @@
         }
 
         .send-btn {
-            background: var(--discord-blue);
+            background: var(--accent-primary);
             color: white;
             border: none;
             border-radius: 4px;
@@ -462,96 +524,272 @@
         }
 
         .send-btn:hover {
-            background: #4752c4;
+            filter: brightness(0.9);
         }
 
-        /* Friend Management */
-        .friend-management {
-            padding: 16px;
-            background: var(--discord-darker);
-        }
-
-        .friend-search {
+        /* Settings Modal */
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            display: none;
         }
 
-        .friend-search input {
-            flex: 1;
-            padding: 12px;
-            background: var(--discord-dark);
-            border: 1px solid var(--discord-gray);
-            border-radius: 4px;
-            color: var(--discord-text);
-            font-size: 1rem;
+        .settings-content {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            width: 800px;
+            max-width: 90%;
+            max-height: 90vh;
+            display: flex;
+            overflow: hidden;
         }
 
-        .search-btn {
-            background: var(--discord-blue);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 0 20px;
+        .settings-sidebar {
+            width: 200px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+        }
+
+        .settings-category {
+            padding: 12px 20px;
             cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 500;
         }
 
-        .requests-section {
+        .settings-category:hover, .settings-category.active {
+            background: var(--bg-tertiary);
+        }
+
+        .settings-category i {
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        .settings-panel {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .panel-title {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .theme-options {
+            display: flex;
+            gap: 20px;
             margin-top: 20px;
         }
 
-        .section-title {
-            font-size: 1.2rem;
-            margin-bottom: 12px;
+        .theme-option {
+            flex: 1;
+            padding: 20px;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .theme-option:hover {
+            transform: translateY(-5px);
+        }
+
+        .theme-option.active {
+            border-color: var(--accent-primary);
+            background: var(--card-bg);
+        }
+
+        .theme-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .account-list {
+            margin-top: 20px;
+        }
+
+        .account-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+
+        .account-item:hover {
+            background: var(--card-bg);
+        }
+
+        .account-item.active {
+            border: 2px solid var(--accent-primary);
+        }
+
+        .account-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+
+        .account-info {
+            flex: 1;
+        }
+
+        .account-name {
             font-weight: 600;
         }
 
-        .request-item {
-            background: var(--discord-dark);
-            border-radius: 8px;
+        .account-email {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .add-account-btn {
+            margin-top: 20px;
+            width: 100%;
             padding: 12px;
-            margin-bottom: 12px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 4px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .add-account-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .profile-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
             display: flex;
             align-items: center;
         }
 
-        .request-avatar {
-            width: 40px;
-            height: 40px;
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
-            margin-right: 12px;
+            margin-right: 20px;
             object-fit: cover;
+            border: 3px solid var(--accent-primary);
         }
 
-        .request-info {
+        .profile-info {
             flex: 1;
         }
 
-        .request-name {
-            font-weight: 600;
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
         }
 
-        .request-actions {
-            display: flex;
-            gap: 8px;
+        .profile-username {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
         }
 
-        .action-btn {
-            padding: 6px 12px;
+        .edit-photo-btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
             border-radius: 4px;
+            padding: 8px 16px;
             cursor: pointer;
             font-weight: 600;
-            border: none;
+            transition: background 0.3s;
         }
 
-        .accept-btn {
-            background: var(--discord-green);
-            color: var(--discord-darkest);
+        .edit-photo-btn:hover {
+            filter: brightness(0.9);
         }
 
-        .decline-btn {
-            background: #f04747;
-            color: white;
+        .form-section {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-title {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .change-limit {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .change-limit span {
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .danger-zone {
+            border-top: 2px solid var(--accent-danger);
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .danger-zone h3 {
+            color: var(--accent-danger);
+            margin-bottom: 15px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
         }
 
         /* Responsive Design */
@@ -580,6 +818,33 @@
             .friend-item {
                 justify-content: center;
             }
+            
+            .settings-content {
+                flex-direction: column;
+                max-height: 95vh;
+            }
+            
+            .settings-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 10px 0;
+                display: flex;
+                overflow-x: auto;
+            }
+            
+            .settings-category {
+                white-space: nowrap;
+                padding: 10px 15px;
+            }
+            
+            .settings-panel {
+                max-height: 70vh;
+            }
+            
+            .theme-options {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -607,6 +872,163 @@
                 <input type="text" id="username" class="form-control" placeholder="cool_username123">
             </div>
             <button class="btn" id="saveUsernameBtn">Save & Continue</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <div class="settings-sidebar">
+                <div class="settings-category active" data-panel="theme">
+                    <i class="fas fa-palette"></i> App Theme
+                </div>
+                <div class="settings-category" data-panel="accounts">
+                    <i class="fas fa-users"></i> Manage Accounts
+                </div>
+                <div class="settings-category" data-panel="profile">
+                    <i class="fas fa-user"></i> My Profile
+                </div>
+                <div class="settings-category" data-panel="about">
+                    <i class="fas fa-info-circle"></i> About URILEX
+                </div>
+            </div>
+            <div class="settings-panel">
+                <!-- Theme Panel -->
+                <div class="settings-panel-content active" id="themePanel">
+                    <h2 class="panel-title">Appearance Settings</h2>
+                    <p>Customize how URILEX looks on your device</p>
+                    
+                    <div class="theme-options">
+                        <div class="theme-option active" data-theme="dark">
+                            <div class="theme-icon">🌙</div>
+                            <h3>Dark Mode</h3>
+                            <p>Default theme for better visibility</p>
+                        </div>
+                        <div class="theme-option" data-theme="light">
+                            <div class="theme-icon">☀️</div>
+                            <h3>Light Mode</h3>
+                            <p>Bright theme for daytime use</p>
+                        </div>
+                        <div class="theme-option" data-theme="system">
+                            <div class="theme-icon">💻</div>
+                            <h3>System Default</h3>
+                            <p>Match your OS preference</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Accounts Panel -->
+                <div class="settings-panel-content" id="accountsPanel">
+                    <h2 class="panel-title">Account Management</h2>
+                    <p>Manage your signed-in Google accounts</p>
+                    
+                    <div class="account-list" id="accountList">
+                        <!-- Accounts will be populated here -->
+                        <div class="account-item active">
+                            <img src="https://i.pravatar.cc/50?img=1" alt="Account" class="account-avatar">
+                            <div class="account-info">
+                                <div class="account-name">John Doe</div>
+                                <div class="account-email">johndoe@example.com</div>
+                            </div>
+                            <i class="fas fa-check-circle" style="color: var(--accent-success);"></i>
+                        </div>
+                        <div class="account-item">
+                            <img src="https://i.pravatar.cc/50?img=2" alt="Account" class="account-avatar">
+                            <div class="account-info">
+                                <div class="account-name">Jane Smith</div>
+                                <div class="account-email">janesmith@example.com</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="add-account-btn" id="addAccountBtn">
+                        <i class="fas fa-plus"></i> Add Google Account
+                    </button>
+                </div>
+                
+                <!-- Profile Panel -->
+                <div class="settings-panel-content" id="profilePanel">
+                    <h2 class="panel-title">Profile Settings</h2>
+                    <p>Manage your profile information and settings</p>
+                    
+                    <div class="profile-card">
+                        <img src="https://i.pravatar.cc/100?img=1" alt="Profile" class="profile-avatar" id="profileAvatar">
+                        <div class="profile-info">
+                            <div class="profile-name" id="profileName">John Doe</div>
+                            <div class="profile-username" id="profileUsername">@johndoe</div>
+                            <button class="edit-photo-btn" id="editPhotoBtn">
+                                <i class="fas fa-camera"></i> Edit Photo
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="form-title">
+                            <h3>Change Display Name</h3>
+                            <div class="change-limit">Changes left: <span id="nameChangesLeft">3</span>/3</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="displayNameInput">New Display Name</label>
+                            <input type="text" id="displayNameInput" class="form-control" placeholder="Enter new display name">
+                        </div>
+                        <button class="btn" id="saveDisplayNameBtn">Save Changes</button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="form-title">
+                            <h3>Change Username</h3>
+                            <div class="change-limit">Changes left: <span id="usernameChangesLeft">3</span>/3</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="usernameInput">New Username</label>
+                            <input type="text" id="usernameInput" class="form-control" placeholder="Enter new username">
+                        </div>
+                        <button class="btn" id="saveUsernameChangesBtn">Save Changes</button>
+                    </div>
+                    
+                    <div class="form-section danger-zone">
+                        <h3>Danger Zone</h3>
+                        <p>These actions are irreversible. Proceed with caution.</p>
+                        
+                        <div class="form-row">
+                            <button class="btn btn-danger" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                            
+                            <button class="btn btn-danger" id="deleteAccountBtn">
+                                <i class="fas fa-trash-alt"></i> Delete Account Forever
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- About Panel -->
+                <div class="settings-panel-content" id="aboutPanel">
+                    <h2 class="panel-title">About URILEX</h2>
+                    <div class="form-section">
+                        <h3>Version Information</h3>
+                        <p><strong>Version:</strong> 2.0.0</p>
+                        <p><strong>Release Date:</strong> October 15, 2023</p>
+                        <p><strong>Developer:</strong> URILEX Team</p>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Technologies Used</h3>
+                        <p>URILEX is built with:</p>
+                        <ul style="padding-left: 20px; margin-top: 10px;">
+                            <li>Firebase Authentication</li>
+                            <li>Firebase Realtime Database</li>
+                            <li>Firebase Storage</li>
+                            <li>HTML5, CSS3, and JavaScript</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Privacy Policy</h3>
+                        <p>Your privacy is important to us. We only store necessary information to provide our services and never share your data with third parties without your consent.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -641,7 +1063,7 @@
                 <div class="nav-title">Direct Messages</div>
                 <div class="friend-list" id="friendList">
                     <!-- Friends will be populated here -->
-                    <div class="friend-item">
+                    <div class="friend-item active">
                         <img src="https://i.pravatar.cc/40?img=1" alt="Friend" class="friend-avatar">
                         <div class="friend-info">
                             <div class="friend-name">
@@ -673,49 +1095,17 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="settings-btn" id="openSettingsBtn">
+                <i class="fas fa-cog"></i>
+                <span class="nav-text">Settings</span>
+            </div>
         </div>
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Friend Management View -->
-            <div class="friend-management" id="friendManagementView">
-                <div class="friend-search">
-                    <input type="text" placeholder="Enter username to add a friend">
-                    <button class="search-btn">Search</button>
-                </div>
-
-                <div class="requests-section">
-                    <div class="section-title">Pending Friend Requests</div>
-                    <div class="request-list" id="requestList">
-                        <!-- Requests will be populated here -->
-                        <div class="request-item">
-                            <img src="https://i.pravatar.cc/40?img=4" alt="User" class="request-avatar">
-                            <div class="request-info">
-                                <div class="request-name">Jordan Smith</div>
-                                <div class="request-tag">@jordan_smith</div>
-                            </div>
-                            <div class="request-actions">
-                                <button class="action-btn accept-btn">Accept</button>
-                                <button class="action-btn decline-btn">Decline</button>
-                            </div>
-                        </div>
-                        <div class="request-item">
-                            <img src="https://i.pravatar.cc/40?img=5" alt="User" class="request-avatar">
-                            <div class="request-info">
-                                <div class="request-name">Casey Brown</div>
-                                <div class="request-tag">@caseyb</div>
-                            </div>
-                            <div class="request-actions">
-                                <button class="action-btn accept-btn">Accept</button>
-                                <button class="action-btn decline-btn">Decline</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Chat View -->
-            <div class="chat-view" id="chatView" style="display: none;">
+            <div class="chat-view" id="chatView">
                 <div class="chat-header">
                     <div class="chat-title">
                         <i class="fas fa-circle"></i>
@@ -796,6 +1186,7 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
+        const storage = firebase.storage();
 
         // DOM Elements
         const authScreen = document.getElementById('authScreen');
@@ -803,9 +1194,23 @@
         const usernameModal = document.getElementById('usernameModal');
         const googleSignInBtn = document.getElementById('googleSignInBtn');
         const saveUsernameBtn = document.getElementById('saveUsernameBtn');
-        const addFriendBtn = document.getElementById('addFriendBtn');
-        const friendManagementView = document.getElementById('friendManagementView');
-        const chatView = document.getElementById('chatView');
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const themeOptions = document.querySelectorAll('.theme-option');
+        const accountList = document.getElementById('accountList');
+        const addAccountBtn = document.getElementById('addAccountBtn');
+        const profileAvatar = document.getElementById('profileAvatar');
+        const profileName = document.getElementById('profileName');
+        const profileUsername = document.getElementById('profileUsername');
+        const editPhotoBtn = document.getElementById('editPhotoBtn');
+        const displayNameInput = document.getElementById('displayNameInput');
+        const saveDisplayNameBtn = document.getElementById('saveDisplayNameBtn');
+        const usernameInput = document.getElementById('usernameInput');
+        const saveUsernameChangesBtn = document.getElementById('saveUsernameChangesBtn');
+        const nameChangesLeft = document.getElementById('nameChangesLeft');
+        const usernameChangesLeft = document.getElementById('usernameChangesLeft');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
         const sendMessageBtn = document.getElementById('sendMessageBtn');
@@ -819,23 +1224,122 @@
         // State variables
         let currentUser = null;
         let selectedFriend = null;
+        let userData = null;
+        const accounts = [];
 
         // Initialize the app
         function initApp() {
+            // Load theme preference
+            loadThemePreference();
+            
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     currentUser = user;
                     checkUsernameExists(user.uid);
+                    
+                    // Add account to session management
+                    addAccountToSession(user);
                 } else {
                     showAuthScreen();
                 }
             });
+            
+            // Load accounts from localStorage
+            loadAccountsFromStorage();
+        }
+
+        // Theme functions
+        function loadThemePreference() {
+            const savedTheme = localStorage.getItem('urilex-theme') || 'dark';
+            setTheme(savedTheme);
+            
+            // Mark active theme option
+            themeOptions.forEach(option => {
+                if (option.dataset.theme === savedTheme) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('urilex-theme', theme);
+        }
+
+        // Account session management
+        function addAccountToSession(user) {
+            const account = {
+                uid: user.uid,
+                displayName: user.displayName,
+                email: user.email,
+                photoURL: user.photoURL,
+                providerId: user.providerData[0].providerId
+            };
+            
+            // Check if account already exists
+            if (!accounts.some(acc => acc.uid === account.uid)) {
+                accounts.push(account);
+                saveAccountsToStorage();
+                renderAccounts();
+            }
+        }
+
+        function saveAccountsToStorage() {
+            localStorage.setItem('urilex-accounts', JSON.stringify(accounts));
+        }
+
+        function loadAccountsFromStorage() {
+            const storedAccounts = localStorage.getItem('urilex-accounts');
+            if (storedAccounts) {
+                const parsedAccounts = JSON.parse(storedAccounts);
+                accounts.push(...parsedAccounts);
+                renderAccounts();
+            }
+        }
+
+        function renderAccounts() {
+            accountList.innerHTML = '';
+            
+            accounts.forEach(account => {
+                const isActive = currentUser && currentUser.uid === account.uid;
+                
+                const accountItem = document.createElement('div');
+                accountItem.className = `account-item ${isActive ? 'active' : ''}`;
+                accountItem.innerHTML = `
+                    <img src="${account.photoURL || 'https://i.pravatar.cc/50'}" alt="Account" class="account-avatar">
+                    <div class="account-info">
+                        <div class="account-name">${account.displayName || 'User'}</div>
+                        <div class="account-email">${account.email}</div>
+                    </div>
+                    ${isActive ? '<i class="fas fa-check-circle" style="color: var(--accent-success);"></i>' : ''}
+                `;
+                
+                accountItem.addEventListener('click', () => {
+                    if (!isActive) {
+                        switchAccount(account);
+                    }
+                });
+                
+                accountList.appendChild(accountItem);
+            });
+        }
+
+        function switchAccount(account) {
+            // In a real app, this would sign in with the selected account
+            alert(`Switching to account: ${account.email}`);
+            // For demo purposes, we'll just update the UI
+            document.querySelectorAll('.account-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            accountList.querySelector('.account-item').classList.add('active');
         }
 
         // Check if username exists for user
         function checkUsernameExists(uid) {
             database.ref('users/' + uid).once('value').then((snapshot) => {
-                const userData = snapshot.val();
+                userData = snapshot.val();
                 if (userData && userData.username) {
                     loadUserData(userData);
                     showApp();
@@ -851,10 +1355,17 @@
             if (currentUser.photoURL) {
                 userAvatar.src = currentUser.photoURL;
                 currentUserAvatar.src = currentUser.photoURL;
+                profileAvatar.src = currentUser.photoURL;
             }
             displayName.textContent = currentUser.displayName || 'User';
+            profileName.textContent = currentUser.displayName || 'User';
             userTag.textContent = '@' + (userData.username || 'username');
+            profileUsername.textContent = '@' + (userData.username || 'username');
             currentUserName.textContent = 'You';
+            
+            // Set change limits (demo values)
+            nameChangesLeft.textContent = userData.nameChangesLeft || 3;
+            usernameChangesLeft.textContent = userData.usernameChangesLeft || 3;
         }
 
         // Show authentication screen
@@ -862,6 +1373,7 @@
             authScreen.style.display = 'flex';
             app.style.display = 'none';
             usernameModal.style.display = 'none';
+            settingsModal.style.display = 'none';
         }
 
         // Show username modal
@@ -869,6 +1381,7 @@
             authScreen.style.display = 'none';
             app.style.display = 'none';
             usernameModal.style.display = 'flex';
+            settingsModal.style.display = 'none';
         }
 
         // Show main app
@@ -876,6 +1389,17 @@
             authScreen.style.display = 'none';
             app.style.display = 'flex';
             usernameModal.style.display = 'none';
+            settingsModal.style.display = 'none';
+            
+            // Auto-scroll to bottom of chat
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 100);
+        }
+
+        // Show settings modal
+        function showSettingsModal() {
+            settingsModal.style.display = 'flex';
         }
 
         // Google Sign-In
@@ -909,24 +1433,15 @@
                     email: currentUser.email,
                     photoURL: currentUser.photoURL,
                     username: username,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    nameChangesLeft: 3,
+                    usernameChangesLeft: 3
                 }).then(() => {
                     loadUserData({username});
                     showApp();
                 }).catch((error) => {
                     console.error('Error saving username:', error);
                 });
-            }
-        }
-
-        // Toggle between chat and friend management
-        function toggleView(view) {
-            if (view === 'friend') {
-                friendManagementView.style.display = 'block';
-                chatView.style.display = 'none';
-            } else if (view === 'chat') {
-                friendManagementView.style.display = 'none';
-                chatView.style.display = 'block';
             }
         }
 
@@ -1020,7 +1535,6 @@
         function selectFriend(friend) {
             selectedFriend = friend;
             chatFriendName.textContent = friend.name;
-            toggleView('chat');
             
             // Clear chat and simulate loading messages
             chatMessages.innerHTML = '';
@@ -1069,11 +1583,132 @@
             }, 100);
         }
 
+        // Simulate updating profile
+        function updateProfile() {
+            if (displayNameInput.value.trim() !== '') {
+                profileName.textContent = displayNameInput.value;
+                displayName.textContent = displayNameInput.value;
+                displayNameInput.value = '';
+                
+                // Update change limit
+                const changesLeft = parseInt(nameChangesLeft.textContent);
+                if (changesLeft > 0) {
+                    nameChangesLeft.textContent = changesLeft - 1;
+                    alert('Display name updated successfully!');
+                } else {
+                    alert('You have no more name changes left. Please wait 18 days.');
+                }
+            }
+            
+            if (usernameInput.value.trim() !== '') {
+                const newUsername = usernameInput.value.trim();
+                profileUsername.textContent = '@' + newUsername;
+                userTag.textContent = '@' + newUsername;
+                usernameInput.value = '';
+                
+                // Update change limit
+                const changesLeft = parseInt(usernameChangesLeft.textContent);
+                if (changesLeft > 0) {
+                    usernameChangesLeft.textContent = changesLeft - 1;
+                    alert('Username updated successfully!');
+                } else {
+                    alert('You have no more username changes left. Please wait 18 days.');
+                }
+            }
+        }
+
+        // Simulate profile photo upload
+        function uploadProfilePhoto() {
+            alert('Profile photo upload dialog would open here. In a real app, this would upload to Firebase Storage.');
+            
+            // Simulate uploading a new photo
+            const newAvatar = 'https://i.pravatar.cc/100?' + Date.now();
+            userAvatar.src = newAvatar;
+            currentUserAvatar.src = newAvatar;
+            profileAvatar.src = newAvatar;
+            
+            alert('Profile photo updated successfully!');
+        }
+
+        // Logout function
+        function logout() {
+            auth.signOut().then(() => {
+                alert('You have been signed out.');
+                showAuthScreen();
+            }).catch((error) => {
+                console.error('Logout error:', error);
+                alert('Logout failed: ' + error.message);
+            });
+        }
+
+        // Delete account function
+        function deleteAccount() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone!')) {
+                // In a real app, this would delete the Firebase user and all their data
+                alert('Account deletion process would start here. In a real app, this would delete the Firebase user and all their data.');
+                logout();
+            }
+        }
+
         // Event Listeners
         googleSignInBtn.addEventListener('click', googleSignIn);
         saveUsernameBtn.addEventListener('click', saveUsername);
-        addFriendBtn.addEventListener('click', () => toggleView('friend'));
+        openSettingsBtn.addEventListener('click', showSettingsModal);
         sendMessageBtn.addEventListener('click', sendMessage);
+        
+        // Settings event listeners
+        themeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const theme = option.dataset.theme;
+                setTheme(theme);
+                
+                themeOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+            });
+        });
+        
+        addAccountBtn.addEventListener('click', googleSignIn);
+        editPhotoBtn.addEventListener('click', uploadProfilePhoto);
+        saveDisplayNameBtn.addEventListener('click', () => {
+            if (displayNameInput.value.trim() !== '') {
+                updateProfile();
+            }
+        });
+        
+        saveUsernameChangesBtn.addEventListener('click', () => {
+            if (usernameInput.value.trim() !== '') {
+                updateProfile();
+            }
+        });
+        
+        logoutBtn.addEventListener('click', logout);
+        deleteAccountBtn.addEventListener('click', deleteAccount);
+        
+        // Close settings when clicking outside
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+        });
+        
+        // Settings category switching
+        document.querySelectorAll('.settings-category').forEach(category => {
+            category.addEventListener('click', () => {
+                const panel = category.dataset.panel;
+                
+                // Update active category
+                document.querySelectorAll('.settings-category').forEach(cat => {
+                    cat.classList.remove('active');
+                });
+                category.classList.add('active');
+                
+                // Show corresponding panel
+                document.querySelectorAll('.settings-panel-content').forEach(p => {
+                    p.classList.remove('active');
+                });
+                document.getElementById(`${panel}Panel`).classList.add('active');
+            });
+        });
         
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
